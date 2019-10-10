@@ -23,7 +23,13 @@ COLORS = {
     'magenta'  : np.array([255, 0, 255]),
     'purple': np.array([112, 39, 195]),
     'yellow': np.array([255, 255, 0]),
-    'grey'  : np.array([100, 100, 100])
+    'grey'  : np.array([100, 100, 100]),
+    'white' : np.array([255, 255, 255])
+}
+
+TRAVERSABLE_COLORS = {
+    True: 'white',
+    False: 'red'
 }
 
 COLOR_NAMES = sorted(list(COLORS.keys()))
@@ -89,7 +95,7 @@ class WorldObj:
     Base class for grid world objects
     """
 
-    def __init__(self, obj_type, color=None):
+    def __init__(self, obj_type, is_traversable=True, color=None):
         assert obj_type in OBJECT_TO_IDX, obj_type
         if type(color) == np.ndarray:
             self.color = color
@@ -98,6 +104,9 @@ class WorldObj:
             assert self.color in COLOR_TO_IDX, self.color
         else:
             self.color = color
+
+        self.is_traversable = is_traversable
+
         self.type = obj_type
         self.contains = None
         self.has_been_seen = False
@@ -384,8 +393,8 @@ class GenericTerrain(WorldObj):
     Colored grass tile the agent can walk over
     """
 
-    def __init__(self, obj_type, color=None):
-        WorldObj.__init__(self, obj_type, color=color)
+    def __init__(self, obj_type, is_traversable=True, color=None):
+        WorldObj.__init__(self, obj_type, is_traversable=is_traversable, color=color)
 
     def can_overlap(self):
         return True
@@ -408,38 +417,59 @@ class GenericTerrain(WorldObj):
 
 class Grass(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=False,
+            color=color)
 
 class Driveway(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=True,
+            color=color)
 
 class Sidewalk(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=True,
+            color=color)
 
 class Road(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=True,
+            color=color)
 
 class Car(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=False,
+            color=color)
 
 class Path(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=True,
+            color=color)
 
 class House(GenericTerrain):
     def __init__(self, color=None):
-        GenericTerrain.__init__(self, self.__class__.__name__.lower(), color=color)
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=False,
+            color=color)
 
 class Grid:
     """
     Represent a grid and operations on it
     """
 
-    def __init__(self, width, height, remember_seen_cells=False):
+    def __init__(self, width, height, remember_seen_cells=False, no_semantic_coloring=False):
         assert width >= 4
         assert height >= 4
 
@@ -449,6 +479,7 @@ class Grid:
         self.grid = [None] * width * height
 
         self.remember_seen_cells = remember_seen_cells
+        self.no_semantic_coloring = no_semantic_coloring
 
     def __contains__(self, key):
         if isinstance(key, WorldObj):
@@ -614,10 +645,13 @@ class Grid:
                     continue
 
                 if v.has_been_seen or not self.remember_seen_cells:
-                    if type(v.color) == np.ndarray:
-                        color = v.color
+                    if self.no_semantic_coloring:
+                        color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
                     else:
-                        color = COLORS[v.color]
+                        if type(v.color) == np.ndarray:
+                            color = v.color
+                        else:
+                            color = COLORS[v.color]
                     array[i, j, :] = color
                     # array[i, j, 0] = OBJECT_TO_IDX[v.type]
                     # array[i, j, 1] = COLOR_TO_IDX[v.color]
@@ -644,10 +678,13 @@ class Grid:
                 if v == None:
                     continue
 
-                if type(v.color) == np.ndarray:
-                    color = v.color
+                if self.no_semantic_coloring:
+                    color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
                 else:
-                    color = COLORS[v.color]
+                    if type(v.color) == np.ndarray:
+                        color = v.color
+                    else:
+                        color = COLORS[v.color]
                 array[i, j, :] = color
                 # array[i, j, :] = COLORS[v.color] / 255.0
 
@@ -784,7 +821,8 @@ class MiniGridEnv(gym.Env):
         see_through_walls=False,
         seed=1337,
         reset_on_init=True,
-        remember_seen_cells=False
+        remember_seen_cells=False,
+        no_semantic_coloring=False
     ):
 
         # Action enumeration for this environment
@@ -826,6 +864,8 @@ class MiniGridEnv(gym.Env):
 
         # Initialize the RNG
         self.seed(seed=seed)
+
+        self.no_semantic_coloring = no_semantic_coloring
 
         # Initialize the state
         if reset_on_init:

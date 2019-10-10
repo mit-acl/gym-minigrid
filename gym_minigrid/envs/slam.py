@@ -25,7 +25,8 @@ class SLAMEnv(MiniGridEnv):
             # Set this to True for maximum speed
             see_through_walls=False,
             reset_on_init=False,
-            remember_seen_cells=True
+            remember_seen_cells=True,
+            no_semantic_coloring=True
         )
 
         # Observations are dictionaries containing an
@@ -105,7 +106,7 @@ class SLAMEnv(MiniGridEnv):
 
     def _gen_grid(self, width, height):
         # Create an empty grid
-        self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells)
+        self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells, no_semantic_coloring=self.no_semantic_coloring)
 
         self.orig_world_array = resize(plt.imread(self.world_image_filename), (height,width,3), order=0)
         assert height == self.orig_world_array.shape[0], "height of loaded world doesn't match gridworld size"
@@ -335,7 +336,7 @@ class SLAMEnv(MiniGridEnv):
         next_states = np.empty((num_actions, state_dim))
         actions = [None for i in range(num_actions)]
         for i in range(num_actions):
-            action = action_dict.keys()[i]
+            action = list(action_dict)[i]
             actions[i] = action
             cmd_vel = action_dict[action]
 
