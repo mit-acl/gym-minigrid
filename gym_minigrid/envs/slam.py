@@ -9,6 +9,8 @@ import glob
 import scipy.ndimage.morphology
 from dc2g.util import get_traversable_colors, get_goal_colors, find_traversable_inds, find_goal_inds, inflate, wrap, get_colormap_dict
 
+dir_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
+
 class SLAMEnv(MiniGridEnv):
     """
     Empty grid environment, no obstacles, sparse reward
@@ -66,7 +68,8 @@ class SLAMEnv(MiniGridEnv):
     def set_difficulty_level(self, difficulty_level):
         dataset = "driveways_bing_iros19"
         image_type = "full_semantic"
-        image_filename = "/home/mfe/code/dc2g_new/data/datasets/{dataset}/{image_type}/{mode}/{world_id}{goal}.png"
+
+        image_filename = "{dir_path}/../../data/datasets/{dataset}/{image_type}/{mode}/{world_id}{goal}.png"
         worlds = {'training': {'mode': 'train', 'worlds': "world*"},
                   'same_neighborhood': {'mode': 'test', 'worlds': "worldn001*"},
                   'new_neighborhood': {'mode': 'test', 'worlds': "worldn002*"},
@@ -91,7 +94,13 @@ class SLAMEnv(MiniGridEnv):
             if dataset == "driveways_bing_iros19":
                 category = 'test_scenario'
 
-        world_id_filenames = glob.glob(image_filename.format(dataset=dataset, image_type="full_semantic", goal="", world_id=worlds[category]['worlds'], mode=worlds[category]['mode']))
+        world_id_filenames = glob.glob(image_filename.format(
+            dir_path=dir_path,
+            dataset=dataset,
+            image_type="full_semantic",
+            goal="",
+            world_id=worlds[category]['worlds'],
+            mode=worlds[category]['mode']))
 
         self.world_id = None
         while self.world_id in [None, "worldn001m001h002", "worldn002m001h003"]:
