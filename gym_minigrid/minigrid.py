@@ -469,7 +469,7 @@ class Grid:
     Represent a grid and operations on it
     """
 
-    def __init__(self, width, height, remember_seen_cells=False, no_semantic_coloring=False):
+    def __init__(self, width, height, remember_seen_cells=False, use_semantic_coloring=True):
         assert width >= 4
         assert height >= 4
 
@@ -479,7 +479,7 @@ class Grid:
         self.grid = [None] * width * height
 
         self.remember_seen_cells = remember_seen_cells
-        self.no_semantic_coloring = no_semantic_coloring
+        self.use_semantic_coloring = use_semantic_coloring
 
     def __contains__(self, key):
         if isinstance(key, WorldObj):
@@ -645,7 +645,7 @@ class Grid:
                     continue
 
                 if v.has_been_seen or not self.remember_seen_cells:
-                    if self.no_semantic_coloring:
+                    if self.use_semantic_coloring:
                         color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
                     else:
                         if type(v.color) == np.ndarray:
@@ -678,7 +678,7 @@ class Grid:
                 if v == None:
                     continue
 
-                if self.no_semantic_coloring:
+                if self.use_semantic_coloring:
                     color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
                 else:
                     if type(v.color) == np.ndarray:
@@ -822,7 +822,7 @@ class MiniGridEnv(gym.Env):
         seed=1337,
         reset_on_init=True,
         remember_seen_cells=False,
-        no_semantic_coloring=False
+        use_semantic_coloring=False
     ):
 
         # Action enumeration for this environment
@@ -865,7 +865,7 @@ class MiniGridEnv(gym.Env):
         # Initialize the RNG
         self.seed(seed=seed)
 
-        self.no_semantic_coloring = no_semantic_coloring
+        self.use_semantic_coloring = use_semantic_coloring
 
         # Initialize the state
         if reset_on_init:

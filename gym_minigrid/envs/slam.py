@@ -26,7 +26,7 @@ class SLAMEnv(MiniGridEnv):
             see_through_walls=False,
             reset_on_init=False,
             remember_seen_cells=True,
-            no_semantic_coloring=True
+            use_semantic_coloring=True
         )
 
         # Observations are dictionaries containing an
@@ -106,7 +106,7 @@ class SLAMEnv(MiniGridEnv):
 
     def _gen_grid(self, width, height):
         # Create an empty grid
-        self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells, no_semantic_coloring=self.no_semantic_coloring)
+        self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells, use_semantic_coloring=self.use_semantic_coloring)
 
         self.orig_world_array = resize(plt.imread(self.world_image_filename), (height,width,3), order=0)
         assert height == self.orig_world_array.shape[0], "height of loaded world doesn't match gridworld size"
