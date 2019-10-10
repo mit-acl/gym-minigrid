@@ -645,19 +645,8 @@ class Grid:
                     continue
 
                 if v.has_been_seen or not self.remember_seen_cells:
-                    if self.use_semantic_coloring:
-                        color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
-                    else:
-                        if type(v.color) == np.ndarray:
-                            color = v.color
-                        else:
-                            color = COLORS[v.color]
+                    color = get_color(v, self.use_semantic_coloring)
                     array[i, j, :] = color
-                    # array[i, j, 0] = OBJECT_TO_IDX[v.type]
-                    # array[i, j, 1] = COLOR_TO_IDX[v.color]
-
-                # if hasattr(v, 'is_open') and v.is_open:
-                    # array[i, j, 2] = 1
 
         return array
 
@@ -678,13 +667,7 @@ class Grid:
                 if v == None:
                     continue
 
-                if self.use_semantic_coloring:
-                    color = COLORS[TRAVERSABLE_COLORS[v.is_traversable]]
-                else:
-                    if type(v.color) == np.ndarray:
-                        color = v.color
-                    else:
-                        color = COLORS[v.color]
+                color = get_color(v, self.use_semantic_coloring)
                 array[i, j, :] = color
                 # array[i, j, :] = COLORS[v.color] / 255.0
 
@@ -778,6 +761,16 @@ class Grid:
                         cell.has_been_seen = True
 
         return mask
+
+def get_color(vertex, use_semantic_coloring):
+    if use_semantic_coloring or vertex.type == 'goal':
+        if type(vertex.color) == np.ndarray:
+            color = vertex.color
+        else:
+            color = COLORS[vertex.color]
+    else:
+        color = COLORS[TRAVERSABLE_COLORS[vertex.is_traversable]]
+    return color
 
 class MiniGridEnv(gym.Env):
     """
