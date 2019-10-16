@@ -135,10 +135,10 @@ class SLAMEnv(MiniGridEnv):
             mode=worlds[category]['mode'],
             extension="jpg"
             )
-        self.satellite_img = plt.imread(self.satellite_img_filename)
+        # self.satellite_img = plt.imread(self.satellite_img_filename)
 
-        self.render_background = Image.open(self.satellite_img_filename)
-        self.render_background = self.render_background.resize([max(self.render_background.size), max(self.render_background.size)])
+        # self.render_background = Image.open(self.satellite_img_filename)
+        # self.render_background = self.render_background.resize([max(self.render_background.size), max(self.render_background.size)])
         
     def _gen_grid(self, width, height):
         # Create an empty grid
