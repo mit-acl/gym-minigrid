@@ -850,6 +850,7 @@ class MiniGridEnv(gym.Env):
         self.max_steps = max_steps
         self.see_through_walls = see_through_walls
         self.remember_seen_cells = remember_seen_cells
+        self.visited_cells = []
 
         # Starting position and direction for the agent
         self.start_pos = None
@@ -1274,6 +1275,7 @@ class MiniGridEnv(gym.Env):
         # Record position of agent prior to step as seen
         current_cell = self.grid.get(*self.agent_pos)
         current_cell.has_been_visited = True
+        self.visited_cells.append(self.agent_pos)
 
         # Rotate left
         if action == self.actions.left:
@@ -1484,7 +1486,7 @@ class MiniGridEnv(gym.Env):
         # Render the whole grid
         self.grid.render(r, CELL_PIXELS)
 
-        self.add_past_trajectory_overlay_to_renderer(r)
+        self.add_past_trajectory_overlay_to_renderer2(r)
         # Draw the agent
         r.push()
         r.translate(
@@ -1571,3 +1573,13 @@ class MiniGridEnv(gym.Env):
                             CELL_PIXELS,
                             255, 255, 255, 255
                         )
+
+    def add_past_trajectory_overlay_to_renderer2(self, r):
+        for pos in self.visited_cells:
+            r.fillRect(
+                pos[0] * CELL_PIXELS,
+                pos[1] * CELL_PIXELS,
+                CELL_PIXELS,
+                CELL_PIXELS,
+                255, 255, 255, 255
+            )

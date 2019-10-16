@@ -8,6 +8,8 @@ import csv
 import glob
 import scipy.ndimage.morphology
 from dc2g.util import get_traversable_colors, get_goal_colors, find_traversable_inds, find_goal_inds, inflate, wrap, get_colormap_dict
+from PIL import Image
+import numpy as np
 
 dir_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
 
@@ -65,11 +67,24 @@ class SLAMEnv(MiniGridEnv):
         if reset_on_init:
             self.reset()
 
+    def show_overlay(self):
+        # plt.figure(0)
+        traj_array = np.zeros((self.grid_size, self.grid_size, 4), dtype=np.uint8)
+        for pos in self.visited_cells:
+            traj_array[pos[1], pos[0], :] = 255
+
+        img = Image.fromarray(np.uint8(traj_array))
+        img = img.resize(self.render_background.size)
+        self.render_background.paste(img, (0, 0), img)
+        return self.render_background
+        # plt.imshow(self.render_background)
+        # plt.pause(1)
+
     def set_difficulty_level(self, difficulty_level):
         dataset = "driveways_bing_iros19"
         image_type = "full_semantic"
 
-        image_filename = "{dir_path}/../../data/datasets/{dataset}/{image_type}/{mode}/{world_id}{goal}.png"
+        image_filename = "{dir_path}/../../data/datasets/{dataset}/{image_type}/{mode}/{world_id}{goal}.{extension}"
         worlds = {'training': {'mode': 'train', 'worlds': "world*"},
                   'same_neighborhood': {'mode': 'test', 'worlds': "worldn001*"},
                   'new_neighborhood': {'mode': 'test', 'worlds': "worldn002*"},
@@ -100,7 +115,9 @@ class SLAMEnv(MiniGridEnv):
             image_type="full_semantic",
             goal="",
             world_id=worlds[category]['worlds'],
-            mode=worlds[category]['mode']))
+            mode=worlds[category]['mode'],
+            extension="png"
+            ))
 
         self.world_id = None
         while self.world_id in [None, "worldn001m001h002", "worldn002m001h003"]:
@@ -108,11 +125,21 @@ class SLAMEnv(MiniGridEnv):
             self.world_id = self.world_image_filename.split('/')[-1].split('.')[0]
 
         self.difficulty_level = difficulty_level
-        
-        # world_id = "n001m003h000"
-        # self.world_image_filename = '/home/mfe/code/dc2g/training_data/driveways_bing_iros19/full_semantic/test/world' + world_id + '.png'
-        # self.world_image_filename = '/home/mfe/code/dc2g/training_data/driveways_icra19/full_semantic/test/world' + str(self.world_id).zfill(3) + '.png'
 
+        self.satellite_img_filename = image_filename.format(
+            dir_path=dir_path,
+            dataset=dataset,
+            image_type="raw",
+            goal="",
+            world_id=worlds[category]['worlds'],
+            mode=worlds[category]['mode'],
+            extension="jpg"
+            )
+        self.satellite_img = plt.imread(self.satellite_img_filename)
+
+        self.render_background = Image.open(self.satellite_img_filename)
+        self.render_background = self.render_background.resize([max(self.render_background.size), max(self.render_background.size)])
+        
     def _gen_grid(self, width, height):
         # Create an empty grid
         self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells, use_semantic_coloring=self.use_semantic_coloring)

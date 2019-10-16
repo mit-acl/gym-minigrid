@@ -193,3 +193,7 @@ class Renderer:
 
     def fillRect(self, x, y, width, height, r, g, b, a=255):
         self.painter.fillRect(QRect(x, y, width, height), QColor(r, g, b, a))
+
+    def addBackgroundImg(self, img):
+        pixmap = QPixmap(img)
+        self.painter.drawPixmap(self.rect(), pixmap)
