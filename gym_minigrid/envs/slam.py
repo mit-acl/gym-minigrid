@@ -165,10 +165,10 @@ class SLAMEnv(MiniGridEnv):
             # "__ignore__": "(?:fence|garden_chair|street_sign|stop_sign)[\w]*",
         }
 
-        # Initialize with an blank class
-        for row in range(height):
-            for col in range(width):
-                self.grid.set(row, col, Blank(np.array([255, 255, 255])))
+        # # Initialize with an blank class
+        # for row in range(height):
+        #     for col in range(width):
+        #         self.grid.set(row, col, Blank(np.array([255, 255, 255])))
 
         self.world_array = self.orig_world_array.copy()
         for key in gym_terrain_class_name_dict:
