@@ -165,6 +165,11 @@ class SLAMEnv(MiniGridEnv):
             # "__ignore__": "(?:fence|garden_chair|street_sign|stop_sign)[\w]*",
         }
 
+        # Initialize with an blank class
+        for row in range(height):
+            for col in range(width):
+                self.grid.set(row, col, Blank(np.array([255, 255, 255])))
+
         self.world_array = self.orig_world_array.copy()
         for key in gym_terrain_class_name_dict:
             try:
@@ -183,7 +188,7 @@ class SLAMEnv(MiniGridEnv):
                 inflated_inds = np.where(goal_array == 1)
                 for i in range(len(inflated_inds[0])):
                     self.grid.set(inflated_inds[1][i], inflated_inds[0][i], obj_name(255.*np.array(color)))
-
+        
         key = "front_door"
         color = goal_color_dict[key]
         obj_name = gym_terrain_class_name_dict[key]

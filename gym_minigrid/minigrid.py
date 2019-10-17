@@ -64,7 +64,8 @@ OBJECT_TO_IDX = {
     'grass':        12,
     'driveway':     13,
     'path':         14,
-    'car':          15
+    'car':          15,
+    'blank':        16
 }
 
 # Map of object type to color names
@@ -444,6 +445,13 @@ class Road(GenericTerrain):
             color=color)
 
 class Car(GenericTerrain):
+    def __init__(self, color=None):
+        GenericTerrain.__init__(self,
+            self.__class__.__name__.lower(), 
+            is_traversable=False,
+            color=color)
+
+class Blank(GenericTerrain):
     def __init__(self, color=None):
         GenericTerrain.__init__(self,
             self.__class__.__name__.lower(), 
