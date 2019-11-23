@@ -139,7 +139,20 @@ class SLAMEnv(MiniGridEnv):
 
         # self.render_background = Image.open(self.satellite_img_filename)
         # self.render_background = self.render_background.resize([max(self.render_background.size), max(self.render_background.size)])
-        
+
+    def _get_c2g_image(self, width, height):
+        # Construct path
+        path = self.world_image_filename.split("full_semantic")[0]
+        mode = self.world_image_filename.split("/")[-2]  # train, val, test
+        filename = self.world_image_filename.split("/")[-1]  # e.g., worldn000m001h006.png
+        c2g_path = path + "full_c2g/" + mode + "/" + filename[:-4] + "-front_door.png"
+
+        # Post process image
+        image = plt.imread(c2g_path)  # shape: (row, column, 4)
+        image = image[:, :, 0:3]  # shape: (row, column, 3)
+
+        return resize(image, (height, width, 3), order=0)
+
     def _gen_grid(self, width, height):
         # Create an empty grid
         self.grid = Grid(width, height, remember_seen_cells=self.remember_seen_cells, use_semantic_coloring=self.use_semantic_coloring)
@@ -147,6 +160,9 @@ class SLAMEnv(MiniGridEnv):
         self.orig_world_array = resize(plt.imread(self.world_image_filename), (height,width,3), order=0)
         assert height == self.orig_world_array.shape[0], "height of loaded world doesn't match gridworld size"
         assert width == self.orig_world_array.shape[1], "width of loaded world doesn't match gridworld size"
+
+        # Get cost2distance image
+        self.c2g_image = self._get_c2g_image(width, height)
 
         # Place a goal square
         dataset = "driveways_bing_iros19"
@@ -201,7 +217,6 @@ class SLAMEnv(MiniGridEnv):
 
         # self.start_pos = np.array([inds[1][i]+1, inds[0][i]+1])
         # self.start_dir = 0
-
 
         self.place_agent(max_tries=500, reject_fn=reject_untraversable)
         
@@ -396,6 +411,76 @@ class SLAMEnv(MiniGridEnv):
             next_states[i,1] = y
             next_states[i,2] = theta_to_theta_ind(theta)
         return next_states, actions
+
+    def get_reward(self, sparse):
+        """Get reward for RL agent. Two options are possible:
+        * Sparse: reward = 10 iff goal reached. O/w step cost of -0.01
+        * Dense: If traversable, a reward based on distance. 
+        If non-traversable, a fixed penalty cost
+        """
+        if sparse:
+            new_cell = self.grid.get(*self.agent_pos)
+            if new_cell.type == "goal":
+                reward = 10
+            else:
+                reward = -0.01
+        else:
+            pixel = self.c2g_image[self.agent_pos[1], self.agent_pos[0], :]
+
+            if pixel[0] == 1. and pixel[1] == 0. and pixel[2] == 0.:
+                # Non-traversable road
+                reward = -1. 
+            else:
+                # Traversable road
+                assert pixel[0] == pixel[1]
+                assert pixel[0] == pixel[2]
+                reward = pixel[0]
+
+        return reward
+        
+    def step(self, action):
+        self.step_count += 1
+
+        # Get the position in front of the agent
+        fwd_pos = self.front_pos
+
+        # Get the contents of the cell in front of the agent
+        fwd_cell = self.grid.get(*fwd_pos)
+
+        # Record position of agent prior to step as seen
+        current_cell = self.grid.get(*self.agent_pos)
+        current_cell.has_been_visited = True
+        self.visited_cells.append(self.agent_pos)
+
+        # Take action
+        if action == self.actions.left:
+            # Rotate left
+            self.agent_dir = (self.agent_dir - 1) % 4
+        elif action == self.actions.right:
+            # Rotate right
+            self.agent_dir = (self.agent_dir + 1) % 4
+        elif action == self.actions.forward:
+            # Move forward
+            if fwd_cell == None or fwd_cell.can_overlap():
+                self.agent_pos = fwd_pos
+
+        # Get new obs
+        obs = self.gen_obs()
+
+        # Get reward
+        reward = self.get_reward(sparse=False)
+
+        # Get done
+        done = False
+
+        if self.step_count >= self.max_steps:
+            done = True
+
+        new_cell = self.grid.get(*self.agent_pos)
+        if new_cell.type == 'goal':
+            done = True
+
+        return obs, reward, done, {}
 
 # keep angle between [-pi, pi]
 def wrap(angle):
