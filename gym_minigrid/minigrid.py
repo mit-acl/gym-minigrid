@@ -900,6 +900,10 @@ class MiniGridEnv(gym.Env):
 
         # Return first observation
         obs = self.gen_obs()
+
+        # Reset visited cells
+        self.visited_cells.clear()
+
         return obs
 
     def seed(self, seed=1337):
@@ -1474,7 +1478,6 @@ class MiniGridEnv(gym.Env):
         """
         Render the whole-grid human view
         """
-
         if close:
             if self.grid_render:
                 self.grid_render.close()
