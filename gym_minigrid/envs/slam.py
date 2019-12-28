@@ -428,13 +428,11 @@ class SLAMEnv(MiniGridEnv):
             pixel = self.c2g_image[self.agent_pos[1], self.agent_pos[0], :]
 
             if pixel[0] == 1. and pixel[1] == 0. and pixel[2] == 0.:
-                # Non-traversable road
-                reward = -1. 
+                reward = -1.  # Non-traversable road
             else:
-                # Traversable road
-                assert pixel[0] == pixel[1]
-                assert pixel[0] == pixel[2]
-                reward = pixel[0]
+                reward = pixel[0] - 1.  # Traversable road
+
+            assert reward <= 0.
 
         return reward
         
@@ -454,15 +452,14 @@ class SLAMEnv(MiniGridEnv):
 
         # Take action
         if action == self.actions.left:
-            # Rotate left
             self.agent_dir = (self.agent_dir - 1) % 4
         elif action == self.actions.right:
-            # Rotate right
             self.agent_dir = (self.agent_dir + 1) % 4
         elif action == self.actions.forward:
-            # Move forward
             if fwd_cell == None or fwd_cell.can_overlap():
                 self.agent_pos = fwd_pos
+        else:
+            raise ValueError()
 
         # Get new obs
         obs = self.gen_obs()
@@ -472,12 +469,12 @@ class SLAMEnv(MiniGridEnv):
 
         # Get done
         done = False
-
         if self.step_count >= self.max_steps:
             done = True
 
         new_cell = self.grid.get(*self.agent_pos)
         if new_cell.type == 'goal':
+            print("Goal reached!")
             done = True
 
         return obs, reward, done, {}
