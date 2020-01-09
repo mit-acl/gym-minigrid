@@ -4,14 +4,14 @@ from gym_minigrid.register import register
 import matplotlib.pyplot as plt
 from skimage.transform import resize
 import os
-import csv
 import glob
 import scipy.ndimage.morphology
-from dc2g.util import get_traversable_colors, get_goal_colors, find_traversable_inds, find_goal_inds, inflate, wrap, get_colormap_dict
+from dc2g.util import find_goal_inds, wrap, get_colormap_dict
 from PIL import Image
 import numpy as np
 
 dir_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
+
 
 class SLAMEnv(MiniGridEnv):
     """
@@ -309,15 +309,8 @@ class SLAMEnv(MiniGridEnv):
         grid, vis_mask = self.gen_obs_grid()
 
         # Encode the partially observable view into a numpy array
-        image = np.transpose(self.grid.encode(), axes=(1, 0, 2)) / 255.0
-
-        # print(image[:,:,0])
-
-        # plt.imshow(image, interpolation='none', cmap=plt.cm.gray)
-        # plt.pause(2)
-
-        # print(image[:,:,1])
-        # image = grid.encode()
+        # image = np.transpose(self.grid.encode(), axes=(1, 0, 2)) / 255.0
+        image = self.orig_world_array  # NOTE DK: for debugging purpose, sending full semantic image
 
         assert hasattr(self, 'mission'), "environments must define a textual mission string"
 
