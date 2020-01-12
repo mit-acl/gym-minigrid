@@ -309,8 +309,7 @@ class SLAMEnv(MiniGridEnv):
         grid, vis_mask = self.gen_obs_grid()
 
         # Encode the partially observable view into a numpy array
-        # image = np.transpose(self.grid.encode(), axes=(1, 0, 2)) / 255.0
-        image = self.orig_world_array  # NOTE DK: for debugging purpose, sending full semantic image
+        image = np.transpose(self.grid.encode(), axes=(1, 0, 2)) / 255.0
 
         assert hasattr(self, 'mission'), "environments must define a textual mission string"
 
