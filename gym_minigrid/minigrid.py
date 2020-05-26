@@ -635,7 +635,7 @@ class Grid:
 
         r.pop()
 
-    def encode(self):
+    def encode(self, show_trajectory=False):
         """
         Produce a compact numpy encoding of the grid
         """
@@ -652,14 +652,21 @@ class Grid:
                 if v == None:
                     continue
 
-                if v.has_been_seen or not self.remember_seen_cells:
-                    color = get_color(v, self.use_semantic_coloring)
-                    array[i, j, :] = color
+                if show_trajectory:
+                    if v.has_been_visited:
+                        color = (255, 255, 255)
+                    else:
+                        color = v.encode(ignore_whether_seen=True)
+                else:
+                    if v.has_been_seen or not self.remember_seen_cells:
+                        color = v.encode()
+                array[i, j, :] = color
 
         return array
 
     def encode_for_oracle(self):
         """
+        unused...
         Produce a compact numpy encoding of the grid
         """
 
