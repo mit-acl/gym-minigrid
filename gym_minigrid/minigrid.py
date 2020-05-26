@@ -4,7 +4,7 @@ from enum import IntEnum
 import numpy as np
 from gym import error, spaces, utils
 from gym.utils import seeding
-from gym_minigrid.rendering import *
+# from gym_minigrid.rendering import *
 
 # Size in pixels of a cell in the full-scale human view
 CELL_PIXELS = 32
@@ -874,7 +874,6 @@ class MiniGridEnv(gym.Env):
             self.reset()
 
     def reset(self):
-        # print("[MiniGridEnv] reset()")
         # Generate a new random grid at the start of each episode
         # To keep the same grid for each episode, call env.seed() with
         # the same seed before calling env.reset()
@@ -902,7 +901,7 @@ class MiniGridEnv(gym.Env):
         obs = self.gen_obs()
 
         # Reset visited cells
-        self.visited_cells.clear()
+        del self.visited_cells[:]
 
         return obs
 
