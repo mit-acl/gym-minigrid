@@ -660,6 +660,8 @@ class Grid:
                 else:
                     if v.has_been_seen or not self.remember_seen_cells:
                         color = v.encode()
+                    else:
+                        color = (0, 0, 0)
                 array[i, j, :] = color
 
         return array
